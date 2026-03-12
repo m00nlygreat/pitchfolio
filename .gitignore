@@ -29,6 +29,11 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+.next-dev.log
+
+# sqlite runtime artifacts
+data/*.sqlite-shm
+data/*.sqlite-wal
 
 # env files (can opt-in for committing if needed)
 .env*

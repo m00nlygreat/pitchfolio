@@ -1,5 +1,5 @@
 {
-  "name": "vote-app-temp",
+  "name": "vote",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -9,12 +9,15 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "better-sqlite3": "^12.6.2",
     "next": "16.1.6",
     "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react-dom": "19.2.3",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
