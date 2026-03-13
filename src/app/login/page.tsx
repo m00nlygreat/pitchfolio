@@ -20,9 +20,6 @@ export default async function LoginPage() {
               로그인하고 시작하세요.
             </h1>
           </div>
-          <p className="mt-8 text-sm text-[color:var(--muted)]">
-            Pitchfolio의 기본 PIN은 0000입니다.
-          </p>
         </section>
 
         <section className="card rounded-[2rem] p-8 sm:p-10">

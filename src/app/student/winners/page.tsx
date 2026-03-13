@@ -1,7 +1,9 @@
 import { WinnersBoard } from "@/components/winners-board";
+import { requireStudentUser } from "@/lib/auth";
 import { getActiveSeason, getSeasonWinners } from "@/lib/repository";
 
-export default function AdminWinnersPage() {
+export default async function StudentWinnersPage() {
+  await requireStudentUser();
   const activeSeason = getActiveSeason();
 
   if (!activeSeason) {

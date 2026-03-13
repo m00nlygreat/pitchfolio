@@ -7,6 +7,7 @@ const studentLinks = [
   { href: "/student/teams", label: "팀" },
   { href: "/student/invest", label: "투자" },
   { href: "/student/results", label: "결과" },
+  { href: "/student/winners", label: "우승" },
 ];
 
 export default async function StudentLayout({

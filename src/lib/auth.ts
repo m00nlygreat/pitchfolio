@@ -2,8 +2,9 @@ import "server-only";
 
 import { createHmac, timingSafeEqual } from "node:crypto";
 
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { cache } from "react";
 
 import type { StudentWorkspace } from "@/lib/repository";
 import { getActiveSeason, getStudentWorkspace, getUserById } from "@/lib/repository";
@@ -44,7 +45,7 @@ function parseSessionToken(token: string) {
   return Number.isInteger(userId) ? userId : null;
 }
 
-export async function getSessionUser() {
+const getSessionUserCached = cache(async () => {
   const store = await cookies();
   const token = store.get(SESSION_COOKIE)?.value;
 
@@ -58,7 +59,42 @@ export async function getSessionUser() {
     return null;
   }
 
-  return getUserById(userId);
+  const user = getUserById(userId);
+
+  if (!user) {
+    return null;
+  }
+
+  if (user.role === "student") {
+    const activeSeason = getActiveSeason();
+
+    if (!user.seasonId || !activeSeason || activeSeason.id !== user.seasonId) {
+      return null;
+    }
+  }
+
+  return user;
+});
+
+export async function getSessionUser() {
+  return getSessionUserCached();
+}
+
+async function shouldUseSecureSessionCookie() {
+  const headerStore = await headers();
+  const forwardedProto = headerStore.get("x-forwarded-proto");
+
+  if (forwardedProto) {
+    return forwardedProto.split(",")[0]?.trim() === "https";
+  }
+
+  const origin = headerStore.get("origin");
+
+  if (origin) {
+    return origin.startsWith("https://");
+  }
+
+  return process.env.NODE_ENV === "production";
 }
 
 export async function setSession(userId: number) {
@@ -66,7 +102,7 @@ export async function setSession(userId: number) {
   store.set(SESSION_COOKIE, createSessionToken(userId), {
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    secure: await shouldUseSecureSessionCookie(),
     path: "/",
     maxAge: 60 * 60 * 8,
   });
@@ -77,7 +113,7 @@ export async function clearSession() {
   store.delete(SESSION_COOKIE);
 }
 
-export async function requireAdminUser() {
+const requireAdminUserCached = cache(async () => {
   const user = await getSessionUser();
 
   if (!user || user.role !== "admin") {
@@ -89,20 +125,16 @@ export async function requireAdminUser() {
   }
 
   return user;
+});
+
+export async function requireAdminUser() {
+  return requireAdminUserCached();
 }
 
-export async function requireStudentUser() {
+const requireStudentUserCached = cache(async () => {
   const user = await getSessionUser();
-  const activeSeason = getActiveSeason();
 
-  if (
-    !user ||
-    user.role !== "student" ||
-    !user.seasonId ||
-    !activeSeason ||
-    activeSeason.id !== user.seasonId
-  ) {
-    await clearSession();
+  if (!user || user.role !== "student") {
     redirect("/login");
   }
 
@@ -111,18 +143,25 @@ export async function requireStudentUser() {
   }
 
   return user;
+});
+
+export async function requireStudentUser() {
+  return requireStudentUserCached();
 }
 
-export async function requireStudentWorkspace(): Promise<StudentWorkspace> {
+const requireStudentWorkspaceCached = cache(async (): Promise<StudentWorkspace> => {
   const user = await requireStudentUser();
   const workspace = getStudentWorkspace(user.id);
 
   if (!workspace) {
-    await clearSession();
     redirect("/login");
   }
 
   return workspace;
+});
+
+export async function requireStudentWorkspace(): Promise<StudentWorkspace> {
+  return requireStudentWorkspaceCached();
 }
 
 export function getUserHomePath(role: "admin" | "student") {

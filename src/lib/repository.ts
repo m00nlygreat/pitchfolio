@@ -812,7 +812,7 @@ export function getAdminResults(seasonId: number) {
   };
 }
 
-export function getAdminWinners(seasonId: number): AdminWinnerSummary {
+export function getSeasonWinners(seasonId: number): AdminWinnerSummary {
   const { teams, students } = getAdminResults(seasonId);
   const teamOrderStats = new Map(
     (
@@ -913,4 +913,8 @@ export function getAdminWinners(seasonId: number): AdminWinnerSummary {
         }
       : null,
   };
+}
+
+export function getAdminWinners(seasonId: number): AdminWinnerSummary {
+  return getSeasonWinners(seasonId);
 }
