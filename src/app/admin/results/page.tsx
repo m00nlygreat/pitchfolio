@@ -14,18 +14,37 @@ export default function AdminResultsPage() {
   }
 
   const { teams, students } = getAdminResults(activeSeason.id);
+  const sortedTeams = [...teams].sort((left, right) => {
+    if (right.payoutRate !== left.payoutRate) {
+      return right.payoutRate - left.payoutRate;
+    }
+
+    return left.name.localeCompare(right.name, "ko-KR");
+  });
+  const sortedStudents = [...students].sort((left, right) => {
+    const leftProfitRate = left.investedAmount > 0 ? left.dividendAmount / left.investedAmount : 0;
+    const rightProfitRate =
+      right.investedAmount > 0 ? right.dividendAmount / right.investedAmount : 0;
+
+    if (rightProfitRate !== leftProfitRate) {
+      return rightProfitRate - leftProfitRate;
+    }
+
+    return left.studentName.localeCompare(right.studentName, "ko-KR");
+  });
 
   return (
     <main className="space-y-6">
       <section className="grid gap-4 md:grid-cols-3">
         {[
-          ["팀 수", String(teams.length)],
-          ["참가자 수", String(students.length)],
+          ["팀 수", String(sortedTeams.length)],
+          ["참가자 수", String(sortedStudents.length)],
           [
             "평균 전환율",
-            teams.length > 0
+            sortedTeams.length > 0
               ? formatPercent(
-                  teams.reduce((sum, team) => sum + team.conversionRate, 0) / teams.length,
+                  sortedTeams.reduce((sum, team) => sum + team.conversionRate, 0) /
+                    sortedTeams.length,
                 )
               : formatPercent(0),
           ],
@@ -52,7 +71,7 @@ export default function AdminResultsPage() {
               </tr>
             </thead>
             <tbody>
-              {teams.map((team) => (
+              {sortedTeams.map((team) => (
                 <tr key={team.id} className="border-t border-[color:var(--line)]">
                   <td className="py-4 pr-6">
                     <div>
@@ -88,7 +107,7 @@ export default function AdminResultsPage() {
               </tr>
             </thead>
             <tbody>
-              {students.map((student) => (
+              {sortedStudents.map((student) => (
                 <tr key={student.studentId} className="border-t border-[color:var(--line)]">
                   <td className="py-4 pr-6 font-semibold">{student.studentName}</td>
                   <td className="py-4 pr-6">{student.teamName}</td>
